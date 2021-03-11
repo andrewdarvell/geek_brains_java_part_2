@@ -1,5 +1,10 @@
 package lessons.one;
 
+import lessons.one.creatures.Creature;
+import lessons.one.obstacles.Obstacle;
+import lessons.one.obstacles.Treadmill;
+import lessons.one.obstacles.Wall;
+
 public class Course {
 
     private final Obstacle[] obstacles;
@@ -23,7 +28,15 @@ public class Course {
         for (Creature creature : team.getParty()) {
             System.out.println("=======");
             for (Obstacle obstacle : obstacles) {
-                obstacle.overcome(creature);
+                if (creature.isAlive()) {
+                    if (obstacle.overcome(creature)) {
+                        System.out.println(creature.getCreatureName() + " overcome obstacle");
+                    } else {
+                        System.out.println(creature.getCreatureName() + " not overcome obstacle");
+                        creature.outCreature();
+                        System.out.println(creature.getCreatureName() + " out of race");
+                    }
+                }
             }
         }
     }

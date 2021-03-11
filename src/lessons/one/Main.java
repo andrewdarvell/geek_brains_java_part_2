@@ -1,5 +1,9 @@
 package lessons.one;
 
+import lessons.one.creatures.Cat;
+import lessons.one.creatures.Human;
+import lessons.one.creatures.Robot;
+
 public class Main {
 
     public static void main(String[] args) {

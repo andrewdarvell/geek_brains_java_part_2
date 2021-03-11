@@ -1,5 +1,8 @@
 package lessons.one;
 
+import lessons.one.creatures.Cat;
+import lessons.one.creatures.Creature;
+
 public class Team {
 
     private final Creature[] party;
@@ -17,12 +20,13 @@ public class Team {
     }
 
     public void showResults() {
+        System.out.println();
         System.out.println("***Team result***");
         for (Creature creature : party) {
             if (creature.isAlive()) {
-                System.out.printf("+ %s %s passed all obstacles%n", creature.getTypeName(), creature.getCreatureName());
+                System.out.printf("+ %s passed all obstacles%n", creature.getCreatureName());
             } else {
-                System.out.printf("- %s %s dropped out of the race%n", creature.getTypeName(), creature.getCreatureName());
+                System.out.printf("- %s dropped out of the race%n", creature.getCreatureName());
             }
         }
     }
