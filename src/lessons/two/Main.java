@@ -44,25 +44,34 @@ public class Main {
 
     public static int convertAndSumArray(String[][] arr) throws MyArraySizeException, MyArrayDataException {
         int sum = 0;
-        try {
-            for (int i = 0; i < 4; i++) {
-                for (int j = 0; j < 4; j++) {
-                    try {
-                        sum += Integer.parseInt(arr[i][j]);
-                    } catch (NumberFormatException e) {
-                        throw new MyArrayDataException(
-                                String.format("Can't convert string to int in [%d][%d] = \"%s\"", i, j, arr[i][j])
-                                , e
-                        );
-                    }
+        checkArraySize(arr);
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                try {
+                    sum += Integer.parseInt(arr[i][j]);
+                } catch (NumberFormatException e) {
+                    throw new MyArrayDataException(
+                            String.format("Can't convert string to int in [%d][%d] = \"%s\"", i, j, arr[i][j])
+                            , e
+                    );
                 }
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new MyArraySizeException("Array size must by 4X4", e);
         }
+
         return sum;
     }
 
+    public static void checkArraySize(String[][] arr) {
+        if (arr.length != 4) {
+            throw new MyArraySizeException("Array size must by 4X4");
+        }
+        for (String[] sub : arr) {
+            if (sub.length != 4) {
+                throw new MyArraySizeException("Array size must by 4X4");
+            }
+        }
+    }
 
 
 }
