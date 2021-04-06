@@ -1,9 +1,9 @@
 package lessons.chatapp;
 
-import lessons.chatapp.client.ChatClient;
+import lessons.chatapp.client.ChatStarter;
 
 public class ClientThree {
     public static void main(String[] args) {
-        new ChatClient();
+        ChatStarter.run();
     }
 }
