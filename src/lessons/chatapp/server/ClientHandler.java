@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public class ClientHandler {
 
-    private final int AUTH_TIMEOUT_SECONDS = 120;
+    private final int AUTH_TIMEOUT_SECONDS = 10;
 
     private final Server server;
     private final Socket socket;

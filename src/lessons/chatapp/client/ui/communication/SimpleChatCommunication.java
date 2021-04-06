@@ -9,10 +9,12 @@ public class SimpleChatCommunication implements ChatCommunication{
 
     private final DataInputStream in;
     private final DataOutputStream out;
+    private final Socket socket;
 
     public SimpleChatCommunication(String host, int port) {
         try {
-            Socket socket = new Socket(host, port);
+            socket = new Socket(host, port);
+
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
@@ -23,7 +25,9 @@ public class SimpleChatCommunication implements ChatCommunication{
     @Override
     public void transmit(String data) {
         try {
-            out.writeUTF(data);
+            if (!socket.isClosed()) {
+                out.writeUTF(data);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Error occurred during data transmitting.", e);
         }
