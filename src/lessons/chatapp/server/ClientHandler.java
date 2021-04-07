@@ -8,10 +8,13 @@ import java.util.Optional;
 
 public class ClientHandler {
 
+    private final int AUTH_TIMEOUT_SECONDS = 120;
+
     private final Server server;
     private final Socket socket;
     private final DataInputStream in;
     private final DataOutputStream out;
+    private Boolean authorized = false;
     private String name;
 
     public ClientHandler(Socket socket, Server server) {
@@ -37,6 +40,7 @@ public class ClientHandler {
 
     private void doAuth() {
         sendMessage("Welcome! Please do authentication.");
+        startAuthTimer();
         while (true) {
             try {
                 String message = in.readUTF();
@@ -51,6 +55,7 @@ public class ClientHandler {
                     if (mayBeCredentials.isPresent()) {
                         AuthService.Entry credentials = mayBeCredentials.get();
                         if (!server.isLoggedIn(credentials.getName())) {
+                            setAuthorized(true);
                             name = credentials.getName();
                             server.broadcast(String.format("User[%s] entered the chat", name));
                             server.subscribe(this);
@@ -62,12 +67,30 @@ public class ClientHandler {
                     } else {
                         sendMessage("Incorrect login or password.");
                     }
+                } else {
+                    sendMessage("Incorrect login command [-auth login pasword]");
                 }
             } catch (IOException e) {
                 throw new ServerException("Something went wrong during authorization.", e);
             }
         }
+    }
 
+    public void startAuthTimer() {
+        new Thread(() -> {
+            try {
+                Thread.sleep(AUTH_TIMEOUT_SECONDS * 1000);
+                if (!isAuthorized()) {
+                    System.out.println("close connection");
+                    sendMessage("Connection clothed by auth timeout");
+                    closeConnection();
+                } else {
+                    System.out.println("Client authorized");
+                }
+            } catch (InterruptedException e) {
+                throw new ServerException("Auth timer interrupted", e);
+            }
+        }).start();
     }
 
     public void receiveMessage() {
@@ -88,10 +111,10 @@ public class ClientHandler {
                 throw new ServerException("Something went wrong during receiving the message.", e);
             }
         }
-
     }
 
-    private void doLogout(){
+
+    private void doLogout() {
         server.logout(this);
         closeConnection();
     }
@@ -99,10 +122,11 @@ public class ClientHandler {
     private void closeConnection() {
         try {
             socket.close();
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new ServerException("Something went wrong when close connection", e);
         }
     }
+
     private void doPrivateMessage(String message) {
         message = message.replace("/w ", "");
         if (!message.isBlank()) {
@@ -136,5 +160,17 @@ public class ClientHandler {
 
     public String getName() {
         return name;
+    }
+
+    public Boolean isAuthorized() {
+        synchronized (authorized) {
+            return authorized;
+        }
+    }
+
+    public void setAuthorized(Boolean authorized) {
+        synchronized (authorized) {
+            this.authorized = authorized;
+        }
     }
 }
