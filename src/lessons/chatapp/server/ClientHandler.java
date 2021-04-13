@@ -1,10 +1,18 @@
 package lessons.chatapp.server;
 
+import lessons.chatapp.server.database.repository.RepositoryFabric;
+import lessons.chatapp.server.database.repository.UserRepository;
+import lessons.chatapp.server.exeptions.ChatUserDuplicateException;
+import lessons.chatapp.server.exeptions.ServerException;
+import lessons.chatapp.server.model.User;
+import lessons.chatapp.server.exeptions.ChatUserNotFoundException;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ClientHandler {
 
@@ -14,7 +22,7 @@ public class ClientHandler {
     private final Socket socket;
     private final DataInputStream in;
     private final DataOutputStream out;
-    private Boolean authorized = false;
+    private final AtomicBoolean authorized = new AtomicBoolean(false);
     private String name;
 
     public ClientHandler(Socket socket, Server server) {
@@ -49,20 +57,23 @@ public class ClientHandler {
                     String login = credentialsStruct[1];
                     String password = credentialsStruct[2];
 
-                    Optional<AuthService.Entry> mayBeCredentials = server.getAuthService()
-                            .findEntryByCredentials(login, password);
+                    UserRepository userRepository = RepositoryFabric.getUserRepository();
+                    Optional<User> maybeUser = userRepository.getUserByCredentials(login, password);
 
-                    if (mayBeCredentials.isPresent()) {
-                        AuthService.Entry credentials = mayBeCredentials.get();
-                        if (!server.isLoggedIn(credentials.getName())) {
-                            setAuthorized(true);
-                            name = credentials.getName();
+//                    Optional<AuthService.Entry> mayBeCredentials = server.getAuthService()
+//                            .findEntryByCredentials(login, password);
+
+                    if (maybeUser.isPresent()) {
+                        User user = maybeUser.get();
+                        if (!server.isLoggedIn(user.getName())) {
+                            setAuthorized();
+                            name = user.getName();
                             server.broadcast(String.format("User[%s] entered the chat", name));
                             server.subscribe(this);
                             sendMessage(String.format("Welcome to chat User[%s]", name));
                             return;
                         } else {
-                            sendMessage(String.format("User with name %s is already logged in", credentials.getName()));
+                            sendMessage(String.format("User with name %s is already logged in", user.getName()));
                         }
                     } else {
                         sendMessage("Incorrect login or password.");
@@ -103,6 +114,8 @@ public class ClientHandler {
                     doLogout();
                     server.broadcast(String.format("User[%s] exit the chat", name));
                     return;
+                } else if (message.startsWith("-change_name")) {
+                    doChangeNickName(message);
                 } else {
                     server.broadcast(String.format("%s: %s", name, message));
                 }
@@ -125,6 +138,24 @@ public class ClientHandler {
         } catch (IOException e) {
             throw new ServerException("Something went wrong when close connection", e);
         }
+    }
+
+    private void doChangeNickName(String message) {
+        String newNick = message.replace("-change_name", "").strip().replaceAll("\\s", "");
+        if (newNick.length() > 0) {
+            UserRepository userRepository = RepositoryFabric.getUserRepository();
+            try {
+                userRepository.changeNickName(name, newNick);
+                server.broadcast(String.format("User [%s] change nick to [%s]", name, newNick));
+                name = newNick;
+
+            } catch (ChatUserDuplicateException e) {
+                sendMessage(e.getMessage());
+            }
+        } else {
+            sendMessage("please try in [-change_name newName] format");
+        }
+
     }
 
     private void doPrivateMessage(String message) {
@@ -162,15 +193,11 @@ public class ClientHandler {
         return name;
     }
 
-    public Boolean isAuthorized() {
-        synchronized (authorized) {
-            return authorized;
-        }
+    public boolean isAuthorized() {
+        return authorized.get();
     }
 
-    public void setAuthorized(Boolean authorized) {
-        synchronized (authorized) {
-            this.authorized = authorized;
-        }
+    public void setAuthorized() {
+        this.authorized.compareAndSet(false, true);
     }
 }
