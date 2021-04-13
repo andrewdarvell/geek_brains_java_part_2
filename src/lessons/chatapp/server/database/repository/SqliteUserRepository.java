@@ -107,6 +107,7 @@ public class SqliteUserRepository implements UserRepository {
             if (checkNewNickUser.isEmpty()) {
                 try {
                     Connection connection = DBConnection.getSqliteDBConnection();
+                    connection.setAutoCommit(false);
                     PreparedStatement ps = connection.prepareStatement("UPDATE users\n" +
                             "SET name = ?\n" +
                             "WHERE name = ?");
@@ -114,6 +115,7 @@ public class SqliteUserRepository implements UserRepository {
                     ps.setString(2, oldNick);
 
                     ps.execute();
+                    connection.commit();
                     ps.close();
                     connection.close();
                 } catch (SQLException e) {
