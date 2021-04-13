@@ -1,5 +1,8 @@
 package lessons.chatapp.server;
 
+import lessons.chatapp.server.exeptions.ChatUserNotFoundException;
+import lessons.chatapp.server.exeptions.ServerException;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -29,6 +32,7 @@ public class Server {
         }
     }
 
+    @Deprecated
     public AuthService getAuthService() {
         return authService;
     }
