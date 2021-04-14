@@ -105,8 +105,8 @@ public class SqliteUserRepository implements UserRepository {
         if (user.isPresent()) {
             Optional<User> checkNewNickUser = getUserByName(newNick);
             if (checkNewNickUser.isEmpty()) {
+                Connection connection = DBConnection.getSqliteDBConnection();
                 try {
-                    Connection connection = DBConnection.getSqliteDBConnection();
                     connection.setAutoCommit(false);
                     PreparedStatement ps = connection.prepareStatement("UPDATE users\n" +
                             "SET name = ?\n" +
@@ -119,7 +119,13 @@ public class SqliteUserRepository implements UserRepository {
                     ps.close();
                     connection.close();
                 } catch (SQLException e) {
+                    try {
+                        connection.rollback();
+                    } catch (SQLException throwables) {
+                        throwables.printStackTrace();
+                    }
                     throw new ServerException("Error while changing user name from DB", e);
+
                 }
             } else {
                 throw new ChatUserDuplicateException(String.format("User %s already exist", newNick));
