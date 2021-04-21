@@ -1,0 +1,9 @@
+Welcome to chat User[userTuser]
+userTuser: hello world
+userTuser: how are you
+userTuser: chat chat chat
+Welcome to chat User[newSuperName]
+newSuperName: hi
+Welcome! Please do authentication.
+Welcome! Please do authentication.
+Welcome! Please do authentication.

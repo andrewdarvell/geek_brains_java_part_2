@@ -13,7 +13,7 @@ public class ChatWindow extends JFrame implements SendActionListener {
     private final TextArea chatText;
     private final Sender sender;
 
-    public ChatWindow(Sender sender) {
+    public ChatWindow(String history, Sender sender) {
         setTitle("My chat 1.0");
         this.sender = sender;
 
@@ -26,6 +26,7 @@ public class ChatWindow extends JFrame implements SendActionListener {
         chatText.setEditable(false);
         chatText.setFocusable(false);
         add(chatText, BorderLayout.CENTER);
+        chatText.append(history);
 
         ActionPanel actionPanel = new ActionPanel(this);
         add(actionPanel.getPanel(), BorderLayout.SOUTH);
