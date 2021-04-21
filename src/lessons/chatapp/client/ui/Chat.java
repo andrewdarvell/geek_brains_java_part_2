@@ -1,5 +1,6 @@
 package lessons.chatapp.client.ui;
 
+import lessons.chatapp.client.history.ChatHistoryWorker;
 import lessons.chatapp.client.ui.communication.ChatCommunication;
 import lessons.chatapp.client.ui.communication.SimpleChatCommunication;
 import lessons.chatapp.client.api.Receiver;
@@ -11,7 +12,8 @@ public class Chat {
 
     public Chat(String host, int port) {
         communication = new SimpleChatCommunication(host, port);
-        frame = new ChatWindow((data) -> communication.transmit(data));
+        String lastMessages = ChatHistoryWorker.readLastMessages(100);
+        frame = new ChatWindow(lastMessages, (data) -> communication.transmit(data));
 
         new Thread(()->{
             Receiver receiver = frame.getReceiver();
@@ -19,6 +21,7 @@ public class Chat {
                 String msg = communication.receive();
                 if (!msg.isBlank()) {
                     receiver.receive(msg);
+                    ChatHistoryWorker.writeMessage(msg);
                 }
             }
         }).start();
